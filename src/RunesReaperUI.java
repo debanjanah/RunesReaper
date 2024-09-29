@@ -7,6 +7,9 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+
+import java.util.Random;
+
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -32,6 +35,11 @@ public class RunesReaperUI extends Application {
     //Setting up variables for Cell interaction
     private Label cellsOpenedLabel; 
     private int cellsOpened = 0;
+    
+    private static final int NUM_RUNES = 10;
+    private Button[][] cells;
+    private boolean[][] runes;
+    private boolean[][] revealed;
 
     @Override
     public void start(Stage primaryStage) {
@@ -42,12 +50,7 @@ public class RunesReaperUI extends Application {
 
     //showStartScreen() initializes and displays the Start screen of the game
     private void showStartScreen() {
-    	//Resets Cells Opened Counter to ZERO
-    	cellsOpened = 0;
-        
-        //Stops and refreshes the Timer
-        stopTimer();
-    	
+            	
     	//Creates a vertical box layout
         VBox startLayout = new VBox(20);
         startLayout.setAlignment(Pos.CENTER);
@@ -152,6 +155,15 @@ public class RunesReaperUI extends Application {
 
     //Initializes and displays the Game screen
     private void showGameScreen() {
+    	cells = new Button[GRID_SIZE][GRID_SIZE];
+        runes = new boolean[GRID_SIZE][GRID_SIZE];
+        revealed = new boolean[GRID_SIZE][GRID_SIZE];
+        
+    	//Resets Cells Opened Counter to ZERO
+    	cellsOpened = 0;
+    	
+    	initializeGame();
+    	
     	//Creates a BorderPane called "gameLayout"
         BorderPane gameLayout = new BorderPane();
 
@@ -176,29 +188,11 @@ public class RunesReaperUI extends Application {
         gameLayout.setCenter(gameGrid);
         //--
 
-        //Creates the Bottom bar
-        HBox bottomBar = new HBox(20);
-        bottomBar.setAlignment(Pos.CENTER);
-        bottomBar.setPadding(new Insets(20));
-
-        //Creates label to show the number of opened cells
-        cellsOpenedLabel = new Label("Cells Opened: 0");
-        cellsOpenedLabel.getStyleClass().add("info1");
-        
-        //Creates "HOME" button that goes back to the Start/Home screen
-        Button homeButton = new Button("Home");
-        homeButton.setOnAction(e -> showStartScreen());
-        homeButton.getStyleClass().add("button1"); 
-        
-        //Creates "SHOP" button
-        Button shopButton = new Button("Shop");
-        shopButton.getStyleClass().add("button1");
-        
-        //Adds Cells Opened Counter, "HOME" and "SHOP" buttons to the bottom bar
-        bottomBar.getChildren().addAll(cellsOpenedLabel,homeButton,shopButton); 
-
+        //Creates the top bar of the game screen by calling createBottomBar() function defined in Line 237
+        HBox bottomBar = createBottomBar();
         //Sets the bottom bar to the bottom of the gameLayout BorderPane
         gameLayout.setBottom(bottomBar);
+        //--        
 
         //Sets the game scene as the current scene on the primary stage
         primaryStage.setScene(gameScene);
@@ -238,7 +232,32 @@ public class RunesReaperUI extends Application {
         //Returns the fully constructed HBox to be used as the top bar
         return topBar;
     }
+    
+    //Creates the Bottom bar
+    private HBox createBottomBar() {    	
+    	HBox bottomBar = new HBox(20);
+        bottomBar.setAlignment(Pos.CENTER);
+        bottomBar.setPadding(new Insets(20));
 
+        //Creates label to show the number of opened cells
+        cellsOpenedLabel = new Label("Cells Opened: 0");
+        cellsOpenedLabel.getStyleClass().add("info1");
+        
+        //Creates "HOME" button that goes back to the Start/Home screen
+        Button homeButton = new Button("Home");
+        homeButton.setOnAction(e -> showStartScreen());
+        homeButton.getStyleClass().add("button1"); 
+        
+        //Creates "SHOP" button
+        Button shopButton = new Button("Shop");
+        shopButton.getStyleClass().add("button1");
+        
+        //Adds Cells Opened Counter, "HOME" and "SHOP" buttons to the bottom bar
+        bottomBar.getChildren().addAll(cellsOpenedLabel,homeButton,shopButton);
+        
+        //Returns the fully constructed HBox to be used as the bottom bar
+        return bottomBar;
+    }
     
     private GridPane createGameGrid() {
         GridPane gameGrid = new GridPane();
@@ -273,8 +292,9 @@ public class RunesReaperUI extends Application {
                 //Checks if cell lies within the radius of circle, only then the cell is added
                 if (distance < radius) {
                 	//Creates a new Button object by calling createCell() function defined in LINE 283
-                    Button cell = createCell();
-                    //Adds the created cell to postion
+                    Button cell = createCell(row, col);
+                    cells[row][col] = cell;
+                    //Adds the created cell to position
                     gameGrid.add(cell, col, row);
                 }
             }
@@ -285,30 +305,130 @@ public class RunesReaperUI extends Application {
     }
 
     //Creates cells
-    private Button createCell() {
+    private Button createCell(int row, int col) {
         Button cell = new Button();
         //Sets the size of the cell
         cell.setPrefSize(CELL_SIZE, CELL_SIZE);
         //Sets event listener to call cellClick() function with the clicked button (cell) as an argument defined on Line 300
-        cell.setOnAction(e -> cellClick(cell));
+        cell.setOnAction(e -> cellClick(row, col));
         //Adds CSS class "game-cell" for styling
         cell.getStyleClass().add("game-cell");
         //Returns created cell
         return cell;
     }
+    
+    private void initializeGame() {
+    	Random random = new Random();
+
+        int runesPlaced = 0;
+        while (runesPlaced < NUM_RUNES) {
+            int row = random.nextInt(GRID_SIZE);
+            int col = random.nextInt(GRID_SIZE);
+            if (!runes[row][col] && cells[row][col] != null) {
+                runes[row][col] = true;
+                runesPlaced++;
+            }
+        }
+    }
 
     //Function to be called when a cell is clicked
-    private void cellClick(Button cell) {
-    	//Disables the button so it can't be clicked again
-        cell.setDisable(true);
-        //Sets the text in the cell as "X" as an indicator
-        cell.setText("X");
-        //Increases the count of number of cells that has been clicked or "opened"
+    private void cellClick(int row, int col) {
+    	
+    	if (revealed[row][col]) return;
+    	
+    	revealed[row][col] = true;
+    	//Increases the count of number of cells that has been clicked or "opened"
         cellsOpened++;
-        //Updates the label that shows the current count of opened cells
-        cellsOpenedLabel.setText("Cells Opened: " + cellsOpened);
+        updateCellsOpenedLabel();
         
-        //Gamelogic to be implemented
+        if (runes[row][col]) {
+            cells[row][col].setText("R");
+            cells[row][col].getStyleClass().add("rune-cell");  //TBD add CSS
+            gameOver(false);
+        } else {
+            int adjacentRunes = countAdjacentRunes(row, col);
+            if (adjacentRunes > 0) {
+                cells[row][col].setText(String.valueOf(adjacentRunes));
+                cells[row][col].getStyleClass().add("number-cell");  //TBD add CSS
+            } else {
+                cells[row][col].setText("");
+                cells[row][col].getStyleClass().add("empty-cell");  //TBD add CSS
+                revealAdjacentCells(row, col);
+            }
+        }
+   	
+        //Disables the button so it can't be clicked again
+        cells[row][col].setDisable(true);
+       //Sets the text in the cell as "X" as an indicator
+        cells[row][col].setText("X");       
+       
+       if (checkWinCondition()) {
+           gameOver(true);
+       }
+    }
+    
+    private void updateCellsOpenedLabel() {
+    	//Updates the label that shows the current count of opened cells
+        cellsOpenedLabel.setText("Cells Opened: " + cellsOpened);
+    }
+    
+    private int countAdjacentRunes(int row, int col) {
+        int count = 0;
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                int newRow = row + i;
+                int newCol = col + j;
+                if (newRow >= 0 && newRow < GRID_SIZE && newCol >= 0 && newCol < GRID_SIZE) {
+                    if (runes[newRow][newCol]) count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    private void revealAdjacentCells(int row, int col) {
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                int newRow = row + i;
+                int newCol = col + j;
+                if (newRow >= 0 && newRow < GRID_SIZE && newCol >= 0 && newCol < GRID_SIZE) {
+                    if (cells[newRow][newCol] != null && !revealed[newRow][newCol]) {
+                    	cellClick(newRow, newCol);
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean checkWinCondition() {
+        for (int row = 0; row < GRID_SIZE; row++) {
+            for (int col = 0; col < GRID_SIZE; col++) {
+                if (cells[row][col] != null && !runes[row][col] && !revealed[row][col]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private void gameOver(boolean win) {
+        for (int row = 0; row < GRID_SIZE; row++) {
+            for (int col = 0; col < GRID_SIZE; col++) {
+                if (cells[row][col] != null) {
+                    cells[row][col].setDisable(true);
+                    if (runes[row][col]) {
+                        cells[row][col].setText("R");
+                        cells[row][col].getStyleClass().add("rune-cell");
+                    }
+                }
+            }
+        }
+        
+        //TBD add dialog box?
+        System.out.println(win ? "You Win!" : "Game Over!");
+
+        //Stops and refreshes the Timer
+        stopTimer();
     }
     
 	/*
