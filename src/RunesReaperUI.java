@@ -36,7 +36,7 @@ public class RunesReaperUI extends Application {
     private Label cellsOpenedLabel; 
     private int cellsOpened = 0;
     
-    private static final int NUM_RUNES = 10;
+    private static final int NUM_RUNES = 30;
     private Button[][] cells;
     private boolean[][] runes;
     private boolean[][] revealed;
@@ -162,8 +162,6 @@ public class RunesReaperUI extends Application {
     	//Resets Cells Opened Counter to ZERO
     	cellsOpened = 0;
     	
-    	initializeGame();
-    	
     	//Creates a BorderPane called "gameLayout"
         BorderPane gameLayout = new BorderPane();
 
@@ -199,6 +197,8 @@ public class RunesReaperUI extends Application {
 
         //Starts the timer
         startTimer();
+    	
+    	initializeGame();
     }
     
     //Creates Top Bar
@@ -318,17 +318,21 @@ public class RunesReaperUI extends Application {
     }
     
     private void initializeGame() {
-    	Random random = new Random();
-
+        Random random = new Random();
         int runesPlaced = 0;
-        while (runesPlaced < NUM_RUNES) {
+        int maxAttempts = GRID_SIZE*GRID_SIZE*2; 
+
+        for (int i = 0; i < maxAttempts && runesPlaced < NUM_RUNES; i++) {
             int row = random.nextInt(GRID_SIZE);
             int col = random.nextInt(GRID_SIZE);
+            
             if (!runes[row][col] && cells[row][col] != null) {
                 runes[row][col] = true;
                 runesPlaced++;
             }
         }
+        
+        System.out.println("Runes placed: " + runesPlaced);
     }
 
     //Function to be called when a cell is clicked
@@ -358,9 +362,7 @@ public class RunesReaperUI extends Application {
         }
    	
         //Disables the button so it can't be clicked again
-        cells[row][col].setDisable(true);
-       //Sets the text in the cell as "X" as an indicator
-        cells[row][col].setText("X");       
+        cells[row][col].setDisable(true);   
        
        if (checkWinCondition()) {
            gameOver(true);
@@ -400,7 +402,7 @@ public class RunesReaperUI extends Application {
         }
     }
 
-    private boolean checkWinCondition() {
+    private boolean checkWinCondition() {//alternate win logic: win if runesplaced+cells opened=total number of cells
         for (int row = 0; row < GRID_SIZE; row++) {
             for (int col = 0; col < GRID_SIZE; col++) {
                 if (cells[row][col] != null && !runes[row][col] && !revealed[row][col]) {
