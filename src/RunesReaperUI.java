@@ -6,6 +6,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.util.Random;
@@ -166,6 +167,7 @@ public class RunesReaperUI extends Application {
         
     	//Resets Cells Opened Counter to ZERO
     	cellsOpened = 0;
+    	gemCount = 0;
     	
     	//Creates a BorderPane called "gameLayout"
         BorderPane gameLayout = new BorderPane();
@@ -534,7 +536,7 @@ public class RunesReaperUI extends Application {
                 }
             }
         }
-    	
+        // Show all runes
         for (int row = 0; row < GRID_SIZE; row++) {
             for (int col = 0; col < GRID_SIZE; col++) {
                 if (cells[row][col] != null) {
@@ -549,11 +551,71 @@ public class RunesReaperUI extends Application {
         
         //TBD add dialog box?
         System.out.println(win ? "You Win!" : "Game Over!");
+        // Show the game over popup
+        showGameOverPopup(win);
 
         //Stops and refreshes the Timer
         stopTimer();
     }
 
+ // Add this method to create and show game over popups
+    private void showGameOverPopup(boolean win) {
+        // Create the popup stage
+        Stage popupStage = new Stage();
+        popupStage.initModality(Modality.APPLICATION_MODAL);
+        popupStage.initOwner(primaryStage);
+        
+        VBox popupVBox = new VBox(15);
+        popupVBox.setAlignment(Pos.CENTER);
+        popupVBox.setPadding(new Insets(20));
+        
+        // Create title text
+        Text titleText = new Text(win ? "Victory!" : "Game Over!");
+        titleText.getStyleClass().add("popup-title");
+        
+        // Create content text
+        Text contentText;
+        if (win) {
+            contentText = new Text("Time: " + secondsElapsed);
+        } else {
+            contentText = new Text("Better Luck Next Time!");
+        }
+        contentText.getStyleClass().add("popup-content");
+        
+        // Create buttons
+        HBox buttonBox = new HBox(10);
+        buttonBox.setAlignment(Pos.CENTER);
+        
+        Button restartButton = new Button("Play Again!");
+        restartButton.getStyleClass().add("button1");
+        restartButton.setOnAction(e -> {
+            popupStage.close();
+            gemsLabel.setText("Gems: 0");
+            showGameScreen();
+        });
+        
+        Button homeButton = new Button("Home");
+        homeButton.getStyleClass().add("button1");
+        homeButton.setOnAction(e -> {
+            popupStage.close();
+            showStartScreen();
+        });
+               
+        buttonBox.getChildren().addAll(restartButton, homeButton);
+        
+        // Add all elements to the popup
+        popupVBox.getChildren().addAll(titleText, contentText, buttonBox);
+        
+        // Create the scene and show the popup
+        Scene popupScene = new Scene(popupVBox);
+        popupScene.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
+        Image image = new Image("img/wand.png");
+        popupScene.setCursor(new ImageCursor(image));
+
+        popupStage.setScene(popupScene);
+        popupStage.show();
+    }
+    
 	/*
 	 * Timer Implementation 
 	 * 1) Check whether a Timeline is created already and create a new Timeline only if it is not have been created 
