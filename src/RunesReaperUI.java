@@ -42,8 +42,9 @@ public class RunesReaperUI extends Application {
     private boolean[][] revealed;
     
     private int gemCount = 0;
-    private Label gemsLabel;
+    private Label gemsLabel = new Label("Gems: "+ gemCount);
     private Random random = new Random();
+    private Button[][] gemButtons = new Button[GRID_SIZE][GRID_SIZE]; // To store gem buttons separately from cells
 
     @Override
     public void start(Stage primaryStage) {
@@ -198,11 +199,11 @@ public class RunesReaperUI extends Application {
 
         //Sets the game scene as the current scene on the primary stage
         primaryStage.setScene(gameScene);
+    	
+    	initializeGame();
 
         //Starts the timer
         startTimer();
-    	
-    	initializeGame();
     }
     
     //Creates Top Bar
@@ -215,7 +216,7 @@ public class RunesReaperUI extends Application {
         topBar.setPadding(new Insets(20));
 
         //Creates a Label to display the number of gems, initially set to ZERO
-        Label gemsLabel = new Label("Gems: "+ gemCount);
+        //Label gemsLabel = new Label("Gems: "+ gemCount);
         gemsLabel.getStyleClass().add("info1");
         
         //Creates a button to display the number of potions, initially set to ZERO, functionality to "use potions" to be added later
@@ -271,8 +272,8 @@ public class RunesReaperUI extends Application {
         //Sets 2px width gap between rows
         gameGrid.setVgap(2);
         
-		/*
-		 * Circular Grid Implementation 
+		
+        /* Circular Grid Implementation 
 		 * 1) A SQUARE grid is assumed with each side being of specified length GRID_SIZE 
 		 * 2) Therefore a circle fitting inside this square will have a diameter of GRID_SIZE 
 		 * 3) The radius of this circle = GRID_SIZE/2
@@ -296,10 +297,19 @@ public class RunesReaperUI extends Application {
                 //Checks if cell lies within the radius of circle, only then the cell is added
                 if (distance < radius) {
                 	//Creates a new Button object by calling createCell() function defined in LINE 283
-                    Button cell = createCell(row, col);
+                	Button cell = createCell(row, col);
                     cells[row][col] = cell;
-                    //Adds the created cell to position
-                    gameGrid.add(cell, col, row);
+                    
+                    // Create gem button
+                    Button gemButton = createGemButton(row, col);
+                    gemButtons[row][col] = gemButton;
+                    
+                    // Create StackPane to hold both buttons
+                    StackPane cellStack = new StackPane();
+                    cellStack.getChildren().addAll(cell, gemButton);
+                    
+                    //Adds the created stack of cells to position
+                    gameGrid.add(cellStack, col, row);
                 }
             }
         }
@@ -313,6 +323,10 @@ public class RunesReaperUI extends Application {
         Button cell = new Button();
         //Sets the size of the cell
         cell.setPrefSize(CELL_SIZE, CELL_SIZE);
+
+        cell.setMinSize(CELL_SIZE, CELL_SIZE);
+        cell.setMaxSize(CELL_SIZE, CELL_SIZE);
+        
         //Sets event listener to call cellClick() function with the clicked button (cell) as an argument defined on Line 300
         cell.setOnAction(e -> cellClick(row, col));
         //Adds CSS class "game-cell" for styling
@@ -338,9 +352,101 @@ public class RunesReaperUI extends Application {
         
         System.out.println("Runes placed: " + runesPlaced);
     }
+   
+ // Add this method to create gem buttons
+    private Button createGemButton(int row, int col) {
+    	Button gemButton = new Button();
+        gemButton.setPrefSize(CELL_SIZE, CELL_SIZE);
+        gemButton.setMinSize(CELL_SIZE, CELL_SIZE);
+        gemButton.setMaxSize(CELL_SIZE, CELL_SIZE);
+        gemButton.setVisible(false);
+        gemButton.setStyle("-fx-background-color: transparent;");
+        
+        ImageView gemView = new ImageView(new Image("img/gem.png"));
+        gemView.setFitWidth(20);
+        gemView.setFitHeight(20);
+        gemButton.setGraphic(gemView);
+        
+        gemButton.setOnAction(e -> {
+            collectGem(row, col);
+            e.consume();
+        });
+        
+        return gemButton;
+    }
+    
+ // Add this method to spawn gems in adjacent cells
+    private void spawnGemsInAdjacentCells(int centerRow, int centerCol) {
+    	// First, remove any existing gems
+        for (int row = 0; row < GRID_SIZE; row++) {
+            for (int col = 0; col < GRID_SIZE; col++) {
+                if (gemButtons[row][col] != null) {
+                    gemButtons[row][col].setVisible(false);
+                }
+            }
+        }
+        
+        // Determine number of gems (0-3)
+        int numGems = random.nextInt(4);
+        if (numGems == 0) return;
+        
+        // Get list of adjacent cells
+        int[][] adjacentCells = new int[8][2];
+        int validAdjacentCells = 0;
+        
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                if (i == 0 && j == 0) continue; // Skip the center cell
+                
+                int newRow = centerRow + i;
+                int newCol = centerCol + j;
+                
+                if (newRow >= 0 && newRow < GRID_SIZE && 
+                    newCol >= 0 && newCol < GRID_SIZE && 
+                    cells[newRow][newCol] != null &&
+                    gemButtons[newRow][newCol] != null &&  // Add null check for gemButtons
+                    !revealed[newRow][newCol]) {
+                    adjacentCells[validAdjacentCells][0] = newRow;
+                    adjacentCells[validAdjacentCells][1] = newCol;
+                    validAdjacentCells++;
+                }
+            }
+        }
+        
+        // Spawn gems
+        for (int i = 0; i < numGems && i < validAdjacentCells; i++) {
+            int index = random.nextInt(validAdjacentCells);
+            int gemRow = adjacentCells[index][0];
+            int gemCol = adjacentCells[index][1];
+            
+            if (gemButtons[gemRow][gemCol] != null) {  // Add null check
+                gemButtons[gemRow][gemCol].setVisible(true);
+            }
+            
+            // Swap the selected cell to the end and decrease valid count
+            int[] temp = adjacentCells[index];
+            adjacentCells[index] = adjacentCells[validAdjacentCells - 1];
+            adjacentCells[validAdjacentCells - 1] = temp;
+            validAdjacentCells--;
+        }
+    }
+
+    // Add this method to handle gem collection
+    private void collectGem(int row, int col) {
+    	if (gemButtons[row][col] != null && gemButtons[row][col].isVisible()) {
+            gemCount++;
+            gemsLabel.setText("Gems: " + gemCount);
+            gemButtons[row][col].setVisible(false);
+        }
+        // Optional: Add visual/sound effect for gem collection
+    }
 
     //Function to be called when a cell is clicked
     private void cellClick(int row, int col) {
+    	// Check if there's a visible gem on this cell
+        if (gemButtons[row][col] != null && gemButtons[row][col].isVisible()) {
+            return; // Don't process cell click if there's a gem
+        }
     	
     	if (revealed[row][col]) return;
     	
@@ -363,9 +469,8 @@ public class RunesReaperUI extends Application {
                 cells[row][col].getStyleClass().add("empty-cell");  //TBD add CSS
                 revealAdjacentCells(row, col);
             }
-            
-            // Spawn new gems after revealing cells
-            spawnGems();
+         // Spawn gems in adjacent cells
+            spawnGemsInAdjacentCells(row, col);
         }
    	
         //Disables the button so it can't be clicked again
@@ -424,8 +529,8 @@ public class RunesReaperUI extends Application {
     	// Remove all gems
         for (int row = 0; row < GRID_SIZE; row++) {
             for (int col = 0; col < GRID_SIZE; col++) {
-                if (cells[row][col] != null) {
-                    cells[row][col].setGraphic(null);
+                if (gemButtons[row][col] != null) {
+                    gemButtons[row][col].setVisible(false);
                 }
             }
         }
@@ -448,54 +553,7 @@ public class RunesReaperUI extends Application {
         //Stops and refreshes the Timer
         stopTimer();
     }
-    
-    // Add this method to create and handle gems
-    private void spawnGems() {
-        // Remove any existing gems
-        for (int row = 0; row < GRID_SIZE; row++) {
-            for (int col = 0; col < GRID_SIZE; col++) {
-                if (cells[row][col] != null) {
-                    cells[row][col].setGraphic(null);
-                }
-            }
-        }
-        
-        // Spawn 1-5 gems
-        int numGems = random.nextInt(5) + 1;
-        
-        for (int i = 0; i < numGems; i++) {
-            int gemRow, gemCol;
-            do {
-                gemRow = random.nextInt(GRID_SIZE);
-                gemCol = random.nextInt(GRID_SIZE);
-            } while (cells[gemRow][gemCol] == null || cells[gemRow][gemCol].getGraphic() != null);
-            
-            // Create gem image
-            Image image = new Image("img/gem.png");
-            ImageView gemView = new ImageView(image);
-            gemView.setFitWidth(20);
-            gemView.setFitHeight(20);
-            
-            cells[gemRow][gemCol].setGraphic(gemView);
-            
-            // Add gem collection click handler
-            int finalGemRow = gemRow;
-            int finalGemCol = gemCol;
-            cells[gemRow][gemCol].setOnMouseClicked(e -> collectGem(finalGemRow, finalGemCol));
-        }
-    }
 
-    // Add this method to handle gem collection
-    private void collectGem(int row, int col) {
-        if (cells[row][col].getGraphic() != null) {
-            gemCount++;
-            gemsLabel.setText("Gems: " + gemCount);
-            cells[row][col].setGraphic(null);
-            
-            // Optional: Add visual/sound effect for gem collection
-        }
-    }
-    
 	/*
 	 * Timer Implementation 
 	 * 1) Check whether a Timeline is created already and create a new Timeline only if it is not have been created 
