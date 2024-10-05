@@ -24,10 +24,10 @@ public class RunesReaperUI extends Application {
 	private Stage primaryStage;
 	//Setting up the total size of the SQUARE grid (length of each side) 
     private int GRID_SIZE = 17; 
-    private int CELL_SIZE = 30;
+    private int CELL_SIZE = 40;
     //Setting up size of window
-    private int WINDOW_WIDTH = 600; 
-    private int WINDOW_HEIGHT = 800;
+    private int WINDOW_WIDTH = 800; 
+    private int WINDOW_HEIGHT = 900;
     //Setting up variables for Timer Implementation
     private Timeline timeline; 
     private int secondsElapsed = 0;
@@ -40,6 +40,10 @@ public class RunesReaperUI extends Application {
     private Button[][] cells;
     private boolean[][] runes;
     private boolean[][] revealed;
+    
+    private int gemCount = 0;
+    private Label gemsLabel;
+    private Random random = new Random();
 
     @Override
     public void start(Stage primaryStage) {
@@ -211,7 +215,7 @@ public class RunesReaperUI extends Application {
         topBar.setPadding(new Insets(20));
 
         //Creates a Label to display the number of gems, initially set to ZERO
-        Label gemsLabel = new Label("Gems: 0");
+        Label gemsLabel = new Label("Gems: "+ gemCount);
         gemsLabel.getStyleClass().add("info1");
         
         //Creates a button to display the number of potions, initially set to ZERO, functionality to "use potions" to be added later
@@ -359,6 +363,9 @@ public class RunesReaperUI extends Application {
                 cells[row][col].getStyleClass().add("empty-cell");  //TBD add CSS
                 revealAdjacentCells(row, col);
             }
+            
+            // Spawn new gems after revealing cells
+            spawnGems();
         }
    	
         //Disables the button so it can't be clicked again
@@ -414,6 +421,15 @@ public class RunesReaperUI extends Application {
     }
 
     private void gameOver(boolean win) {
+    	// Remove all gems
+        for (int row = 0; row < GRID_SIZE; row++) {
+            for (int col = 0; col < GRID_SIZE; col++) {
+                if (cells[row][col] != null) {
+                    cells[row][col].setGraphic(null);
+                }
+            }
+        }
+    	
         for (int row = 0; row < GRID_SIZE; row++) {
             for (int col = 0; col < GRID_SIZE; col++) {
                 if (cells[row][col] != null) {
@@ -433,12 +449,59 @@ public class RunesReaperUI extends Application {
         stopTimer();
     }
     
+    // Add this method to create and handle gems
+    private void spawnGems() {
+        // Remove any existing gems
+        for (int row = 0; row < GRID_SIZE; row++) {
+            for (int col = 0; col < GRID_SIZE; col++) {
+                if (cells[row][col] != null) {
+                    cells[row][col].setGraphic(null);
+                }
+            }
+        }
+        
+        // Spawn 1-5 gems
+        int numGems = random.nextInt(5) + 1;
+        
+        for (int i = 0; i < numGems; i++) {
+            int gemRow, gemCol;
+            do {
+                gemRow = random.nextInt(GRID_SIZE);
+                gemCol = random.nextInt(GRID_SIZE);
+            } while (cells[gemRow][gemCol] == null || cells[gemRow][gemCol].getGraphic() != null);
+            
+            // Create gem image
+            Image image = new Image("img/gem.png");
+            ImageView gemView = new ImageView(image);
+            gemView.setFitWidth(20);
+            gemView.setFitHeight(20);
+            
+            cells[gemRow][gemCol].setGraphic(gemView);
+            
+            // Add gem collection click handler
+            int finalGemRow = gemRow;
+            int finalGemCol = gemCol;
+            cells[gemRow][gemCol].setOnMouseClicked(e -> collectGem(finalGemRow, finalGemCol));
+        }
+    }
+
+    // Add this method to handle gem collection
+    private void collectGem(int row, int col) {
+        if (cells[row][col].getGraphic() != null) {
+            gemCount++;
+            gemsLabel.setText("Gems: " + gemCount);
+            cells[row][col].setGraphic(null);
+            
+            // Optional: Add visual/sound effect for gem collection
+        }
+    }
+    
 	/*
 	 * Timer Implementation 
 	 * 1) Check whether a Timeline is created already and create a new Timeline only if it is not have been created 
 	 * 2) Stop the Timeline before starting it again.
 	 */
-
+    
     //Creates the Timeline and checking for previously created ones
     private void startTimer() {
     	//Initializes the Timeline only if it's null
