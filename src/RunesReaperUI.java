@@ -43,9 +43,15 @@ public class RunesReaperUI extends Application {
     private boolean[][] revealed;
     
     private int gemCount = 0;
-    private Label gemsLabel = new Label("Gems: "+ gemCount);
+    private Label gemsLabel = new Label("Gems: 0");
     private Random random = new Random();
     private Button[][] gemButtons = new Button[GRID_SIZE][GRID_SIZE]; // To store gem buttons separately from cells
+
+    private int hintsCount;
+    private Button hintsLabel = new Button("Clairvoyance: 0");
+    
+    private int potionCount;
+    private Button potionLabel = new Button("Potions: 0");
 
     @Override
     public void start(Stage primaryStage) {
@@ -56,6 +62,7 @@ public class RunesReaperUI extends Application {
 
     //showStartScreen() initializes and displays the Start screen of the game
     private void showStartScreen() {
+    	reset();
             	
     	//Creates a vertical box layout
         VBox startLayout = new VBox(20);
@@ -102,7 +109,20 @@ public class RunesReaperUI extends Application {
         primaryStage.show();
     }
     
-    //Creates and displays an "About" screen
+    private void reset() {
+    	cellsOpened = 0;
+    	gemCount = 0;
+    	gemsLabel.setText("Gems: 0");
+    	hintsCount = 0;
+        hintsLabel.setText("Clairvoyance: 0");
+        potionLabel.setText("Potions: 0");
+    	potionCount = 0;
+
+        //Stops and refreshes the Timer
+        stopTimer();
+	}
+
+	//Creates and displays an "About" screen
     private void showAboutDialog() {
     	
     	//Creates a new vertical box layout with 20px spacing between elements which will be aligned in the center
@@ -164,11 +184,9 @@ public class RunesReaperUI extends Application {
     	cells = new Button[GRID_SIZE][GRID_SIZE];
         runes = new boolean[GRID_SIZE][GRID_SIZE];
         revealed = new boolean[GRID_SIZE][GRID_SIZE];
+
+        reset();
         
-    	//Resets Cells Opened Counter to ZERO
-    	cellsOpened = 0;
-    	gemCount = 0;
-    	
     	//Creates a BorderPane called "gameLayout"
         BorderPane gameLayout = new BorderPane();
 
@@ -218,15 +236,14 @@ public class RunesReaperUI extends Application {
         topBar.setPadding(new Insets(20));
 
         //Creates a Label to display the number of gems, initially set to ZERO
-        //Label gemsLabel = new Label("Gems: "+ gemCount);
         gemsLabel.getStyleClass().add("info1");
         
         //Creates a button to display the number of potions, initially set to ZERO, functionality to "use potions" to be added later
-        Button potionLabel = new Button("Potions: 0");
+        //Button potionLabel = new Button("Potions: 0");
         potionLabel.getStyleClass().add("button1");
         
         //Creates a Button to display the number of clairvoyance (hints),functionality to "use clairvoyance" to be added later
-        Button hintsLabel = new Button("Clairvoyance: 0");
+        //Button hintsLabel = new Button("Clairvoyance: 0");
         hintsLabel.getStyleClass().add("button1");
         
         //Creates a Label to display the elapsed time, starting from 0 seconds
@@ -258,6 +275,7 @@ public class RunesReaperUI extends Application {
         //Creates "SHOP" button
         Button shopButton = new Button("Shop");
         shopButton.getStyleClass().add("button1");
+        shopButton.setOnAction(e -> showShopPopup());
         
         //Adds Cells Opened Counter, "HOME" and "SHOP" buttons to the bottom bar
         bottomBar.getChildren().addAll(cellsOpenedLabel,homeButton,shopButton);
@@ -553,9 +571,6 @@ public class RunesReaperUI extends Application {
         System.out.println(win ? "You Win!" : "Game Over!");
         // Show the game over popup
         showGameOverPopup(win);
-
-        //Stops and refreshes the Timer
-        stopTimer();
     }
 
  // Add this method to create and show game over popups
@@ -605,6 +620,64 @@ public class RunesReaperUI extends Application {
         
         // Add all elements to the popup
         popupVBox.getChildren().addAll(titleText, contentText, buttonBox);
+        
+        // Create the scene and show the popup
+        Scene popupScene = new Scene(popupVBox);
+        popupScene.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
+        Image image = new Image("img/wand.png");
+        popupScene.setCursor(new ImageCursor(image));
+
+        popupStage.setScene(popupScene);
+        popupStage.show();
+    }
+    
+    private void showShopPopup() {
+        // Create the popup stage
+        Stage popupStage = new Stage();
+        popupStage.initModality(Modality.APPLICATION_MODAL);
+        popupStage.initOwner(primaryStage);
+        
+        VBox popupVBox = new VBox(15);
+        popupVBox.setAlignment(Pos.CENTER);
+        popupVBox.setPadding(new Insets(20));
+        
+        // Create title text
+        Text titleText = new Text("Enchanted Exchange!");
+        titleText.getStyleClass().add("popup-title");
+        
+        Label messageLabel = new Label();
+                
+        Button hintButton = new Button("1 Clairvoyance spell for 5 gems");
+        hintButton.getStyleClass().add("button1");
+        hintButton.setOnAction(e -> {
+            if (gemCount < 5) {
+            	messageLabel.setText("Not Enough Gems!");
+            } else {
+            	messageLabel.setText("You've bought a Spell!");
+				hintsCount++;
+            	hintsLabel.setText("Clairvoyance: " + hintsCount);
+            	gemCount = gemCount - 5;
+            	gemsLabel.setText("Gems: " + gemCount);
+            }
+            	
+        });
+        
+        Button potionButton = new Button("1 Potion for 3 gems");
+        potionButton.getStyleClass().add("button1");
+        potionButton.setOnAction(e -> {
+        	if (gemCount < 3) {
+        		messageLabel.setText("Not Enough Gems!");
+            } else {
+            	messageLabel.setText("You've bought a Potion!");
+				potionCount++;
+				potionLabel.setText("Potions: " + potionCount);
+				gemCount = gemCount - 3;
+				gemsLabel.setText("Gems: " + gemCount);
+            }
+        });
+        
+        // Add all elements to the popup
+        popupVBox.getChildren().addAll(titleText, messageLabel, hintButton, potionButton);
         
         // Create the scene and show the popup
         Scene popupScene = new Scene(popupVBox);
