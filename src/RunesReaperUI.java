@@ -575,7 +575,8 @@ public class RunesReaperUI extends Application {
                 int newCol = col + j;
                 if (newRow >= 0 && newRow < GRID_SIZE && newCol >= 0 && newCol < GRID_SIZE) {
                     if (runes[newRow][newCol]) {
-                        runes[newRow][newCol].setText("B");
+                        cells[newRow][newCol].setText("B");
+                        cells[newRow][newCol].setDisable(true);
                         return;
                     }
                 }
