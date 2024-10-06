@@ -12,12 +12,20 @@ import javafx.stage.Stage;
 import java.util.Random;
 
 import javafx.animation.Animation;
+import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.util.Duration;
 import javafx.scene.ImageCursor;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+
+import javafx.animation.ParallelTransition;
+import javafx.animation.ScaleTransition;
+import javafx.animation.TranslateTransition;
+import javafx.animation.FadeTransition;
+import javafx.scene.Node;
+import javafx.scene.layout.Pane;
 
 public class RunesReaperUI extends Application {
 	
@@ -49,21 +57,7 @@ public class RunesReaperUI extends Application {
 
     private int hintsCount;
     private Button hintsLabel = new Button("Clairvoyance: 0");
-    hintsLabel.setOnAction(e -> {
-        if(hintsCount <= 0) {
-            // TODO: you don't have any clairvoyance left!
-            return;
-        }
-        this.hintsCount--;
-        this.hintsLabel.setText("Clairvoyance: " + this.hintsCount);
-        if (!this.isClairvoyant) {
-            this.onClairvoyanceEnabled();
-        } else {
-            this.onClairvoyanceDisabled();
-        }
-    });
-
-    
+        
     private int potionCount;
     private Button potionLabel = new Button("Potions: 0");
 
@@ -131,8 +125,8 @@ public class RunesReaperUI extends Application {
     	gemsLabel.setText("Gems: 0");
     	hintsCount = 0;
         hintsLabel.setText("Clairvoyance: 0");
-        potionLabel.setText("Potions: 0");
     	potionCount = 0;
+        potionLabel.setText("Potions: 0");
 
         //Stops and refreshes the Timer
         stopTimer();
@@ -188,7 +182,6 @@ public class RunesReaperUI extends Application {
         //Sets the wand image as custom cursor
         Image image = new Image("img/wand.png");
         aboutScene.setCursor(new ImageCursor(image));
-        ImageCursor.getBestSize(50,50);
 
         //Sets the current scene of the primary stage to about scene
         primaryStage.setScene(aboutScene);
@@ -219,6 +212,20 @@ public class RunesReaperUI extends Application {
         //Sets the top bar at the top of the BorderPane
         gameLayout.setTop(topBar);
         //--
+                
+        hintsLabel.setOnAction(e -> {
+            if(hintsCount <= 0) {
+                // TODO: you don't have any clairvoyance left!
+                return;
+            }
+            this.hintsCount--;
+            this.hintsLabel.setText("Clairvoyance: " + this.hintsCount);
+            if (!this.isClairvoyant) {
+                this.onClairvoyanceEnabled();
+            } else {
+                this.onClairvoyanceDisabled();
+            }
+        });
 
         //Creates new GridPane layout to organize the tiles in a grid created by calling createGameGrid() function which is defined in Line 224
         GridPane gameGrid = createGameGrid();
@@ -399,9 +406,10 @@ public class RunesReaperUI extends Application {
         gemButton.setStyle("-fx-background-color: transparent;");
         
         ImageView gemView = new ImageView(new Image("img/gem.png"));
-        gemView.setFitWidth(20);
-        gemView.setFitHeight(20);
+        gemView.setFitWidth(CELL_SIZE - 7);
+        gemView.setFitHeight(CELL_SIZE - 7);
         gemButton.setGraphic(gemView);
+        fadeInImage(gemView);
         
         gemButton.setOnAction(e -> {
             collectGem(row, col);
@@ -413,16 +421,18 @@ public class RunesReaperUI extends Application {
 
     private void onClairvoyanceEnabled()
     {
-        this.isClairvoyant = true;
-        // set the different cursor
-        // I love you :*
+        this.isClairvoyant = true;        
+        Scene currentScene = primaryStage.getScene();
+        Image image = new Image("img/cwand.gif");
+        currentScene.setCursor(new ImageCursor(image));
     }
 
     private void onClairvoyanceDisabled()
     {
         this.isClairvoyant = false;
-        // set the default cursor
-        // I love you :*
+        Scene currentScene = primaryStage.getScene();
+        Image image = new Image("img/wand.png");
+        currentScene.setCursor(new ImageCursor(image));
     }
     
  // Add this method to spawn gems in adjacent cells
@@ -509,18 +519,15 @@ public class RunesReaperUI extends Application {
 
         if (isRuneSelected) {
             if(this.isClairvoyant) {
-                // TODO: Blue rune animation
-                cells[row][col].setText("B");
+            	setFrozenFire(row, col);
                 this.onClairvoyanceDisabled();
             }
             else if (this.potionCount > 0) {
-                // TODO: what to do when potion is there
-                cells[row][col].setText("B");
+            	setFrozenFire(row, col);
                 this.potionCount--;
                 this.potionLabel.setText("Potions: " + this.potionCount);
             } else {
-                cells[row][col].setText("R");
-                cells[row][col].getStyleClass().add("rune-cell");  //TODO: add CSS
+            	setFire(row, col);
                 gameOver(false);
             }
         } else {
@@ -531,6 +538,7 @@ public class RunesReaperUI extends Application {
 
                 if(this.isClairvoyant) {
                     this.revealOneAdjacentRune(row, col);
+                    this.onClairvoyanceDisabled();
                 }
             } else {
                 cells[row][col].setText("");
@@ -549,7 +557,34 @@ public class RunesReaperUI extends Application {
        }
     }
     
-    private void updateCellsOpenedLabel() {
+    private void setFire(int row, int col) {
+    	ImageView image = new ImageView(new Image("img/fire.png"));
+    	image.setFitWidth(CELL_SIZE - 7);  // Slightly smaller than cell
+    	image.setFitHeight(CELL_SIZE - 7);                
+        cells[row][col].setGraphic(image);	
+        
+        fadeInImage(image);
+	}
+
+	private void setFrozenFire(int row, int col) {
+    	ImageView image = new ImageView(new Image("img/frozen.png"));
+    	image.setFitWidth(CELL_SIZE - 4);  // Slightly smaller than cell
+    	image.setFitHeight(CELL_SIZE - 4);                
+        cells[row][col].setGraphic(image);
+        cells[row][col].setStyle("-fx-background-color: #B7C9E2; -fx-border-color: #537eb9;");
+        
+        fadeInImage(image);
+	}
+	
+	private void fadeInImage(ImageView image) {
+		// Create fade-in animation
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(500), image);
+        fadeIn.setFromValue(0.0);
+        fadeIn.setToValue(1.0);
+        fadeIn.play();
+	}
+
+	private void updateCellsOpenedLabel() {
     	//Updates the label that shows the current count of opened cells
         cellsOpenedLabel.setText("Cells Opened: " + cellsOpened);
     }
@@ -575,7 +610,7 @@ public class RunesReaperUI extends Application {
                 int newCol = col + j;
                 if (newRow >= 0 && newRow < GRID_SIZE && newCol >= 0 && newCol < GRID_SIZE) {
                     if (runes[newRow][newCol]) {
-                        cells[newRow][newCol].setText("B");
+                    	setFrozenFire(row, col);
                         cells[newRow][newCol].setDisable(true);
                         return;
                     }
@@ -624,8 +659,7 @@ public class RunesReaperUI extends Application {
                 if (cells[row][col] != null) {
                     cells[row][col].setDisable(true);
                     if (runes[row][col]) {
-                        cells[row][col].setText("R");
-                        cells[row][col].getStyleClass().add("rune-cell");
+                        setFire(row,col);
                     }
                 }
             }
