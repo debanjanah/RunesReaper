@@ -49,6 +49,20 @@ public class RunesReaperUI extends Application {
 
     private int hintsCount;
     private Button hintsLabel = new Button("Clairvoyance: 0");
+    hintsLabel.setOnAction(e -> {
+        if(hintsCount <= 0) {
+            // TODO: you don't have any clairvoyance left!
+            return;
+        }
+        this.hintsCount--;
+        this.hintsLabel.setText("Clairvoyance: " + this.hintsCount);
+        if (!this.isClairvoyant) {
+            this.onClairvoyanceEnabled();
+        } else {
+            this.onClairvoyanceDisabled();
+        }
+    });
+
     
     private int potionCount;
     private Button potionLabel = new Button("Potions: 0");
@@ -117,19 +131,6 @@ public class RunesReaperUI extends Application {
     	gemsLabel.setText("Gems: 0");
     	hintsCount = 0;
         hintsLabel.setText("Clairvoyance: 0");
-        hintsLabel.setOnAction(e -> {
-            if(hintsCount <= 0) {
-                // TODO: you don't have any clairvoyance left!
-                return;
-            }
-            this.hintsCount--;
-            if (!this.isClairvoyant) {
-                this.onClairvoyanceEnabled();
-            } else {
-                this.onClairvoyanceDisabled();
-            }
-        });
-
         potionLabel.setText("Potions: 0");
     	potionCount = 0;
 
@@ -516,6 +517,7 @@ public class RunesReaperUI extends Application {
                 // TODO: what to do when potion is there
                 cells[row][col].setText("B");
                 this.potionCount--;
+                this.potionLabel.setText("Potions: " + this.potionCount);
             } else {
                 cells[row][col].setText("R");
                 cells[row][col].getStyleClass().add("rune-cell");  //TODO: add CSS
