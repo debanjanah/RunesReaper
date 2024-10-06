@@ -43,15 +43,18 @@ public class RunesReaperUI extends Application {
     private boolean[][] revealed;
     
     private int gemCount = 0;
-    private Label gemsLabel = new Label("Gems: 0");
+	private String gemLabelValue = "Gems: ";
+    private Label gemsLabel = new Label(gemLabelValue + gemCount);
     private Random random = new Random();
     private Button[][] gemButtons = new Button[GRID_SIZE][GRID_SIZE]; // To store gem buttons separately from cells
 
-    private int hintsCount;
-    private Button hintsLabel = new Button("Clairvoyance: 0");
+    private int hintsCount = 0;
+    private String hintsLabelValue = "Clairvoyance: ";
+    private Button hintsLabel = new Button(hintsLabelValue  + hintsCount);
     
-    private int potionCount;
-    private Button potionLabel = new Button("Potions: 0");
+    private int potionCount = 0;
+    private String potionLabelValue = "Life Potions: ";
+    private Button potionLabel = new Button(potionLabelValue + potionCount);
 
     @Override
     public void start(Stage primaryStage) {
@@ -111,12 +114,13 @@ public class RunesReaperUI extends Application {
     
     private void reset() {
     	cellsOpened = 0;
+    	
     	gemCount = 0;
-    	gemsLabel.setText("Gems: 0");
+		gemsLabel.setText(gemLabelValue  + gemCount);
     	hintsCount = 0;
-        hintsLabel.setText("Clairvoyance: 0");
-        potionLabel.setText("Potions: 0");
+		hintsLabel.setText(hintsLabelValue  + hintsCount);
     	potionCount = 0;
+        potionLabel.setText(potionLabelValue + potionCount);
 
         //Stops and refreshes the Timer
         stopTimer();
@@ -239,11 +243,9 @@ public class RunesReaperUI extends Application {
         gemsLabel.getStyleClass().add("info1");
         
         //Creates a button to display the number of potions, initially set to ZERO, functionality to "use potions" to be added later
-        //Button potionLabel = new Button("Potions: 0");
         potionLabel.getStyleClass().add("button1");
         
         //Creates a Button to display the number of clairvoyance (hints),functionality to "use clairvoyance" to be added later
-        //Button hintsLabel = new Button("Clairvoyance: 0");
         hintsLabel.getStyleClass().add("button1");
         
         //Creates a Label to display the elapsed time, starting from 0 seconds
@@ -670,7 +672,7 @@ public class RunesReaperUI extends Application {
             } else {
             	messageLabel.setText("You've bought a Potion!");
 				potionCount++;
-				potionLabel.setText("Potions: " + potionCount);
+				potionLabel.setText(potionLabelValue  + potionCount);
 				gemCount = gemCount - 3;
 				gemsLabel.setText("Gems: " + gemCount);
             }
