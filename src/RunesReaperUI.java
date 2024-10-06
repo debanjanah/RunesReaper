@@ -509,26 +509,26 @@ public class RunesReaperUI extends Application {
         if (isRuneSelected) {
             if(this.isClairvoyant) {
                 // TODO: Blue rune animation
-                cells[row][col].setText('B');
+                cells[row][col].setText("B");
                 this.onClairvoyanceDisabled();
             }
             else if (this.potionCount > 0) {
                 // TODO: what to do when potion is there
-                cells[row][col].setText('B');
+                cells[row][col].setText("B");
                 this.potionCount--;
             } else {
                 cells[row][col].setText("R");
-                cells[row][col].getStyleClass().add("rune-cell");  //TBD add CSS
+                cells[row][col].getStyleClass().add("rune-cell");  //TODO: add CSS
                 gameOver(false);
             }
         } else {
             int adjacentRunes = countAdjacentRunes(row, col);
             if (adjacentRunes > 0) {
                 cells[row][col].setText(String.valueOf(adjacentRunes));
-                cells[row][col].getStyleClass().add("number-cell");  //TBD add CSS
+                cells[row][col].getStyleClass().add("number-cell");  //TODO: add CSS
             } else {
                 cells[row][col].setText("");
-                cells[row][col].getStyleClass().add("empty-cell");  //TBD add CSS
+                cells[row][col].getStyleClass().add("empty-cell");  //TODO: add CSS
                 revealAdjacentCells(row, col);
             }
          // Spawn gems in adjacent cells
