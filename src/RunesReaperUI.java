@@ -528,6 +528,10 @@ public class RunesReaperUI extends Application {
             if (adjacentRunes > 0) {
                 cells[row][col].setText(String.valueOf(adjacentRunes));
                 cells[row][col].getStyleClass().add("number-cell");  //TODO: add CSS
+
+                if(this.isClairvoyant) {
+                    this.revealOneAdjacentRune(row, col);
+                }
             } else {
                 cells[row][col].setText("");
                 cells[row][col].getStyleClass().add("empty-cell");  //TODO: add CSS
@@ -562,6 +566,21 @@ public class RunesReaperUI extends Application {
             }
         }
         return count;
+    }
+
+    private void revealOneAdjacentRune(int row, int col) {
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                int newRow = row + i;
+                int newCol = col + j;
+                if (newRow >= 0 && newRow < GRID_SIZE && newCol >= 0 && newCol < GRID_SIZE) {
+                    if (runes[newRow][newCol]) {
+                        runes[newRow][newCol].setText("B");
+                        return;
+                    }
+                }
+            }
+        }
     }
 
     private void revealAdjacentCells(int row, int col) {
