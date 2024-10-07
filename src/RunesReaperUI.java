@@ -63,7 +63,7 @@ public class RunesReaperUI extends Application {
         
     private int potionCount = 0;
     private String potionLabelValue = "Life Potions: ";
-    private Button potionLabel = new Button(potionLabelValue + potionCount);
+    private Label potionLabel = new Label(potionLabelValue + potionCount);
 
     private boolean isClairvoyant = false;
 
@@ -214,7 +214,13 @@ public class RunesReaperUI extends Application {
         //--
                 
         hintsLabel.setOnAction(e -> {
-            if(hintsCount <= 0) {
+        	if (this.isClairvoyant) {
+                this.disableClairvoyance();
+                hintsCount++;
+                this.hintsLabel.setText(hintsLabelValue + this.hintsCount);
+                return;
+            }
+        	if(hintsCount <= 0) {
                 // TODO: you don't have any clairvoyance left!
                 return;
             }
@@ -222,8 +228,6 @@ public class RunesReaperUI extends Application {
             this.hintsLabel.setText(hintsLabelValue + this.hintsCount);
             if (!this.isClairvoyant) {
                 this.enableClairvoyance();
-            } else {
-                this.disableClairvoyance();
             }
         });
 
@@ -265,7 +269,7 @@ public class RunesReaperUI extends Application {
         gemsLabel.getStyleClass().add("info1");
         
         //Creates a button to display the number of potions, initially set to ZERO, functionality to "use potions" to be added later
-        potionLabel.getStyleClass().add("button1");
+        potionLabel.getStyleClass().add("info1");
         
         //Creates a Button to display the number of clairvoyance (hints),functionality to "use clairvoyance" to be added later
         hintsLabel.getStyleClass().add("button1");
@@ -275,7 +279,7 @@ public class RunesReaperUI extends Application {
         timerLabel.getStyleClass().add("info1");
 
         //Adds all created labels and buttons to the HBox
-        topBar.getChildren().addAll(gemsLabel, potionLabel, hintsLabel, timerLabel);
+        topBar.getChildren().addAll(timerLabel, gemsLabel, potionLabel, hintsLabel);
         
         //Returns the fully constructed HBox to be used as the top bar
         return topBar;
@@ -496,14 +500,15 @@ public class RunesReaperUI extends Application {
     		ImageView animatedGem = new ImageView(new Image("img/gem.png"));
     		animatedGem.setFitWidth(55);
             animatedGem.setFitHeight(55);
-            animatedGem.setTranslateX(150);
+            int xPos = 275;
+            animatedGem.setTranslateX(xPos);
             animatedGem.setTranslateY(100);
             // Add the animated gem to the game layout
             gameLayout.getChildren().add(animatedGem);
             
             // Create movement animation
             TranslateTransition move = new TranslateTransition(Duration.millis(500), animatedGem);
-            move.setToX(150);
+            move.setToX(xPos);
             move.setToY(10);
             
             // Create scale down animation
@@ -828,14 +833,15 @@ public class RunesReaperUI extends Application {
     	ImageView animatedGem = new ImageView(new Image("img/potion.png"));
 		animatedGem.setFitWidth(70);
         animatedGem.setFitHeight(70);
-        animatedGem.setTranslateX(280);
+        int xPos = 415;
+        animatedGem.setTranslateX(xPos);
         animatedGem.setTranslateY(100);
         // Add the animated gem to the game layout
         gameLayout.getChildren().add(animatedGem);
         
         // Create movement animation
         TranslateTransition move = new TranslateTransition(Duration.millis(700), animatedGem);
-        move.setToX(280);
+        move.setToX(xPos);
         move.setToY(0);
         
         // Create scale down animation
@@ -868,15 +874,16 @@ public class RunesReaperUI extends Application {
     	ImageView animatedGem = new ImageView(new Image("img/spark.png"));
 		animatedGem.setFitWidth(100);
         animatedGem.setFitHeight(100);
-        animatedGem.setTranslateX(430);
+        int xPos = 550;
+        animatedGem.setTranslateX(xPos);
         animatedGem.setTranslateY(100);
         // Add the animated gem to the game layout
         gameLayout.getChildren().add(animatedGem);
         
         // Create movement animation
         TranslateTransition move = new TranslateTransition(Duration.millis(700), animatedGem);
-        move.setToX(430);
-        move.setToY(0);
+        move.setToX(xPos);
+        move.setToY(10);
         
         // Create scale down animation
         ScaleTransition scaleDown = new ScaleTransition(Duration.millis(500), animatedGem);
