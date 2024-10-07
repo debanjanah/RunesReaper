@@ -213,24 +213,6 @@ public class RunesReaperUI extends Application {
         gameLayout.setTop(topBar);
         //--
                 
-        hintsLabel.setOnAction(e -> {
-        	if (this.isClairvoyant) {
-                this.disableClairvoyance();
-                hintsCount++;
-                this.hintsLabel.setText(hintsLabelValue + this.hintsCount);
-                return;
-            }
-        	if(hintsCount <= 0) {
-                // TODO: you don't have any clairvoyance left!
-                return;
-            }
-            this.hintsCount--;
-            this.hintsLabel.setText(hintsLabelValue + this.hintsCount);
-            if (!this.isClairvoyant) {
-                this.enableClairvoyance();
-            }
-        });
-
         //Creates new GridPane layout to organize the tiles in a grid created by calling createGameGrid() function which is defined in Line 224
         GridPane gameGrid = createGameGrid();
         gameGrid.setPadding(new Insets(20));
@@ -273,6 +255,23 @@ public class RunesReaperUI extends Application {
         
         //Creates a Button to display the number of clairvoyance (hints),functionality to "use clairvoyance" to be added later
         hintsLabel.getStyleClass().add("button1");
+        hintsLabel.setOnAction(e -> {
+        	if (this.isClairvoyant) {
+                this.disableClairvoyance();
+                hintsCount++;
+                this.hintsLabel.setText(hintsLabelValue + this.hintsCount);
+                return;
+            }
+        	if(hintsCount <= 0) {
+                // TODO: you don't have any clairvoyance left!
+                return;
+            }
+            if (!this.isClairvoyant) {
+                this.enableClairvoyance();
+                this.hintsCount--;
+                this.hintsLabel.setText(hintsLabelValue + this.hintsCount);
+            }
+        });
         
         //Creates a Label to display the elapsed time, starting from 0 seconds
         timerLabel = new Label("Time: 0s");
@@ -789,7 +788,7 @@ public class RunesReaperUI extends Application {
         imageView.setFitWidth(100); 
         imageView.setPreserveRatio(true);
 
-        Button hintButton = new Button("1 Clairvoyance spell for 5 gems");
+        Button hintButton = new Button("1 Clairvoyance Spell for 5 gems");
         hintButton.getStyleClass().add("button1");
         hintButton.setOnAction(e -> {
             if (gemCount < 5) {
@@ -803,7 +802,7 @@ public class RunesReaperUI extends Application {
             	
         });
         
-        Button potionButton = new Button("1 Potion for 3 gems");
+        Button potionButton = new Button("1 Life Potion for 3 gems");
         potionButton.getStyleClass().add("button1");
         potionButton.setOnAction(e -> {
         	if (gemCount < 3) {
@@ -883,7 +882,7 @@ public class RunesReaperUI extends Application {
         // Create movement animation
         TranslateTransition move = new TranslateTransition(Duration.millis(700), animatedGem);
         move.setToX(xPos);
-        move.setToY(10);
+        move.setToY(0);
         
         // Create scale down animation
         ScaleTransition scaleDown = new ScaleTransition(Duration.millis(500), animatedGem);
