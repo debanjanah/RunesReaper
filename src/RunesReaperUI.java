@@ -45,39 +45,40 @@ public class RunesReaperUI extends Application {
     //Setting up variables for Cell interaction
     private Label cellsOpenedLabel; 
     private int cellsOpened = 0;
-    
-    private static final int NUM_RUNES = 30;
+    //Setting up variables for Fire and Runes (cells) interaction
+    private int NUM_FIRE_RUNES = 30;
     private Button[][] cells;
-    private boolean[][] runes;
+    private boolean[][] fires;
     private boolean[][] revealed;
-    
+    //Setting up variables for Gems interaction
     private int gemCount = 0;
     private String gemsLabelValue = "Gems: ";
     private Label gemsLabel = new Label(gemsLabelValue + gemCount);
     private Random random = new Random();
     private Button[][] gemButtons = new Button[GRID_SIZE][GRID_SIZE]; // To store gem buttons separately from cells
-
+    //Setting up variables for Clairvoyance (hints) interaction
     private int hintsCount = 0;
     private String hintsLabelValue = "Clairvoyance: ";
     private Button hintsLabel = new Button(hintsLabelValue + hintsCount);
-        
+    private boolean isClairvoyant = false;
+    //Setting up variables for Potions (lives) interaction  
     private int potionCount = 0;
     private String potionLabelValue = "Life Potions: ";
     private Label potionLabel = new Label(potionLabelValue + potionCount);
 
-    private boolean isClairvoyant = false;
-
     @Override
     public void start(Stage primaryStage) {
         this.primaryStage = primaryStage;
+        //Disabling window resizing so that animations look consistent
         primaryStage.setResizable(false);
         primaryStage.setMaximized(false);
-        //Calls the showStartScreen() function which we defined on line 40 to display the start screen
+        //Calls the showStartScreen() function which is defined on line 79 to display the start screen
         showStartScreen(); 
     }
 
     //showStartScreen() initializes and displays the Start screen of the game
     private void showStartScreen() {
+    	//Calls reset function which is defined in Line 128
     	reset();
             	
     	//Creates a vertical box layout
@@ -117,13 +118,14 @@ public class RunesReaperUI extends Application {
         //Sets the title of window
         primaryStage.setTitle("RunesReaper");
 
-        //Setting up a custom cursor
+        //Setting up a custom cursor by calling this function define in Line 914
         setWandCursor();
         
         //Displays the window
         primaryStage.show();
     }
     
+    //function to reset all counters to ZERO
     private void reset() {
     	cellsOpened = 0;
     	gemCount = 0;
@@ -152,25 +154,31 @@ public class RunesReaperUI extends Application {
         
         //Creates a new Text and sets the content of the HowToPlayText
         Text HowToPlayText = new Text();
-        HowToPlayText.setText("🧙‍♂️ Welcome, dear Mage! 🧙‍♂️\n");
-        HowToPlayText.getStyleClass().add("text2");
-        
-        Text howToPlayContent = new Text(
-        		"Your mission is to navigate this magical terrain,\n"+
-                "while collecting precious gems and avoiding dangerous fire traps!\n\n" +
-                "The Runes and the Firefield:\n" +
-                "The game board represents the Rune cells filled with a magical Firefield.\n" +
+        HowToPlayText.setText("Welcome, dear Mage!");
+        HowToPlayText.getStyleClass().add("title-light");        
+        Text howToPlayContent1 = new Text(
+        		"Your mission is to navigate this magical terrain, while collecting precious\n"+
+                "gems and avoiding dangerous fire traps!"
+            );
+        howToPlayContent1.getStyleClass().add("content");
+        Text howToPlayContent2 = new Text("The Runes and the Firefield");
+        howToPlayContent2.setStyle("-fx-font-weight: bold;");
+        howToPlayContent2.getStyleClass().add("content");
+        Text howToPlayContent3 = new Text(        		
+                "The game board represents the Rune cells filled with a dangerous Firefield.\n" +
                 "Beware of hidden fire traps scattered across the field.\n" +
                 "Triggering a Fire trap will instantly ruin everything.\n" +
                 "Click on Rune cells to reveal what's beneath.\n" +
                 "Be cautious! Each click could unveil a gems or a dangerous fire!\n" +
-                "Open all Rune cells to win!!.\n\n" +
-                "Gems and Special Abilities:\n" +
-                "💎 Collect gems to buy Special Abilities. More gems means more power!\n" +
-                "🧪 Potions: Use it and no Fire can harm you!.\n" +
-                "🔮 Clairvoyance: Freeze Fire cells around your current position.\n"
+                "Open all Rune cells to win!!"
             );
-        howToPlayContent.getStyleClass().add("text2");
+        howToPlayContent3.getStyleClass().add("content");
+        
+        //Displays text image
+        Image text = new Image("img/text.png"); 
+        ImageView textView = new ImageView(text);
+        textView.setFitWidth(527); 
+        textView.setPreserveRatio(true);
         
         //Creates "HOME" button that goes back to the Start/Home screen
         Button homeButton = new Button("Home");
@@ -178,7 +186,7 @@ public class RunesReaperUI extends Application {
         homeButton.setOnAction(e -> showStartScreen());
         homeButton.getStyleClass().add("button1");
 
-        aboutLayout.getChildren().addAll(logoView,HowToPlayText,howToPlayContent,homeButton);
+        aboutLayout.getChildren().addAll(logoView,HowToPlayText,howToPlayContent1,howToPlayContent2,howToPlayContent3,textView,homeButton);
 
         //Creates a new Scene with the aboutLayout of the same specified size and adds external CSS for styling
         Scene aboutScene = new Scene(aboutLayout, WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -195,7 +203,7 @@ public class RunesReaperUI extends Application {
     //Initializes and displays the Game screen
     private void showGameScreen() {
     	cells = new Button[GRID_SIZE][GRID_SIZE];
-        runes = new boolean[GRID_SIZE][GRID_SIZE];
+    	fires = new boolean[GRID_SIZE][GRID_SIZE];
         revealed = new boolean[GRID_SIZE][GRID_SIZE];
 
         reset();
@@ -263,7 +271,7 @@ public class RunesReaperUI extends Application {
                 return;
             }
         	if(hintsCount <= 0) {
-                // TODO: you don't have any clairvoyance left!
+                showNoHintsPopup();
                 return;
             }
             if (!this.isClairvoyant) {
@@ -315,9 +323,9 @@ public class RunesReaperUI extends Application {
         GridPane gameGrid = new GridPane();
         gameGrid.setAlignment(Pos.CENTER);
         //Sets 2px width gap between columns
-        gameGrid.setHgap(2);
+        gameGrid.setHgap(3);
         //Sets 2px width gap between rows
-        gameGrid.setVgap(2);
+        gameGrid.setVgap(3);
         
 		
         /* Circular Grid Implementation 
@@ -384,20 +392,20 @@ public class RunesReaperUI extends Application {
     
     private void initializeGame() {
         Random random = new Random();
-        int runesPlaced = 0;
+        int firesPlaced = 0;
         int maxAttempts = GRID_SIZE*GRID_SIZE*2; 
 
-        for (int i = 0; i < maxAttempts && runesPlaced < NUM_RUNES; i++) {
+        for (int i = 0; i < maxAttempts && firesPlaced < NUM_FIRE_RUNES; i++) {
             int row = random.nextInt(GRID_SIZE);
             int col = random.nextInt(GRID_SIZE);
             
-            if (!runes[row][col] && cells[row][col] != null) {
-                runes[row][col] = true;
-                runesPlaced++;
+            if (!fires[row][col] && cells[row][col] != null) {
+            	fires[row][col] = true;
+            	firesPlaced++;
             }
         }
         
-        System.out.println("Runes placed: " + runesPlaced);
+        System.out.println("Runes placed: " + firesPlaced);
     }
    
     // Add this method to create gem buttons
@@ -528,7 +536,7 @@ public class RunesReaperUI extends Application {
             parallelTransition.setOnFinished(e -> {
                 gameLayout.getChildren().remove(animatedGem);
                 gemCount++;
-                gemsLabel.setText("Gems: " + gemCount);
+                gemsLabel.setText(gemsLabelValue + gemCount);
                 gemButtons[row][col].setVisible(false);
             });
             
@@ -551,9 +559,9 @@ public class RunesReaperUI extends Application {
         cellsOpened++;
         updateCellsOpenedLabel();
         
-        boolean isRuneSelected = runes[row][col];
+        boolean isFireSelected = fires[row][col];
 
-        if (isRuneSelected) {
+        if (isFireSelected) {
             if(this.isClairvoyant) {
             	setFrozenFire(row, col);
                 this.disableClairvoyance();
@@ -562,18 +570,19 @@ public class RunesReaperUI extends Application {
             	setFrozenFire(row, col);
                 this.potionCount--;
                 this.potionLabel.setText(potionLabelValue + this.potionCount);
+                showUsedPotionPopup();
             } else {
             	setFire(row, col);
                 gameOver(false);
             }
         } else {
-            int adjacentRunes = countAdjacentRunes(row, col);
-            if (adjacentRunes > 0) {
-                cells[row][col].setText(String.valueOf(adjacentRunes));
-                cells[row][col].getStyleClass().add("number-cell");  //TODO: add CSS
+            int adjacentFires = countAdjacentFires(row, col);
+            if (adjacentFires > 0) {
+                cells[row][col].setText(String.valueOf(adjacentFires));
+                cells[row][col].getStyleClass().add("number-cell");
                 
                 if(this.isClairvoyant) {
-                    this.revealOneAdjacentRune(row, col);
+                    this.revealOneAdjacentFire(row, col);
                     this.disableClairvoyance();
                 }
             } else {
@@ -621,27 +630,27 @@ public class RunesReaperUI extends Application {
         cellsOpenedLabel.setText("Cells Opened: " + cellsOpened);
     }
     
-    private int countAdjacentRunes(int row, int col) {
+    private int countAdjacentFires(int row, int col) {
         int count = 0;
         for (int i = -1; i <= 1; i++) {
             for (int j = -1; j <= 1; j++) {
                 int newRow = row + i;
                 int newCol = col + j;
                 if (newRow >= 0 && newRow < GRID_SIZE && newCol >= 0 && newCol < GRID_SIZE) {
-                    if (runes[newRow][newCol]) count++;
+                    if (fires[newRow][newCol]) count++;
                 }
             }
         }
         return count;
     }
 
-    private void revealOneAdjacentRune(int row, int col) {
+    private void revealOneAdjacentFire(int row, int col) {
         for (int i = -1; i <= 1; i++) {
             for (int j = -1; j <= 1; j++) {
                 int newRow = row + i;
                 int newCol = col + j;
                 if (newRow >= 0 && newRow < GRID_SIZE && newCol >= 0 && newCol < GRID_SIZE) {
-                    if (runes[newRow][newCol]) {
+                    if (fires[newRow][newCol]) {
                     	setFrozenFire(newRow, newCol);
                     	cells[newRow][newCol].setDisable(true);
                         return;
@@ -665,10 +674,10 @@ public class RunesReaperUI extends Application {
         }
     }
 
-    private boolean checkWinCondition() {//alternate win logic: win if runesplaced+cells opened=total number of cells
+    private boolean checkWinCondition() {
         for (int row = 0; row < GRID_SIZE; row++) {
             for (int col = 0; col < GRID_SIZE; col++) {
-                if (cells[row][col] != null && !runes[row][col] && !revealed[row][col]) {
+                if (cells[row][col] != null && !fires[row][col] && !revealed[row][col]) {
                     return false;
                 }
             }
@@ -690,7 +699,7 @@ public class RunesReaperUI extends Application {
             for (int col = 0; col < GRID_SIZE; col++) {
                 if (cells[row][col] != null) {
                     cells[row][col].setDisable(true);
-                    if (runes[row][col]) {
+                    if (fires[row][col]) {
                         setFire(row,col);
                     }
                 }
@@ -718,16 +727,16 @@ public class RunesReaperUI extends Application {
         
         // Create title text
         Text titleText = new Text(win ? "Victory!" : "Game Over!");
-        titleText.getStyleClass().add("popup-title");
+        titleText.getStyleClass().add("title");
         
         // Create content text
         Text contentText;
         if (win) {
-            contentText = new Text("Time: " + secondsElapsed);
+            contentText = new Text("Congratulations! You've won in " + secondsElapsed + " seconds");
         } else {
             contentText = new Text("Better Luck Next Time!");
         }
-        contentText.getStyleClass().add("popup-content");
+        contentText.getStyleClass().add("content");
         
         // Create buttons
         HBox buttonBox = new HBox(10);
@@ -737,7 +746,6 @@ public class RunesReaperUI extends Application {
         restartButton.getStyleClass().add("button1");
         restartButton.setOnAction(e -> {
             popupStage.close();
-            gemsLabel.setText("Gems: 0");
             showGameScreen();
         });
         
@@ -778,12 +786,12 @@ public class RunesReaperUI extends Application {
         
         // Create title text
         Text titleText = new Text("Enchanted Exchange!");
-        titleText.getStyleClass().add("popup-title");
+        titleText.getStyleClass().add("title");
         
-        Label messageLabel = new Label();
+        Label messageLabel = new Label("You can buy Spells and Potions!");
         
         Image potionImage = new Image("img/potion.gif");
-        Image spellImage = new Image("img/spark.gif");        
+        Image spellImage = new Image("img/wand.gif");        
         ImageView imageView = new ImageView("img/crystal.png");
         imageView.setFitWidth(100); 
         imageView.setPreserveRatio(true);
@@ -862,7 +870,7 @@ public class RunesReaperUI extends Application {
 			potionCount++;
 			potionLabel.setText(potionLabelValue  + potionCount);
 			gemCount = gemCount - 3;
-			gemsLabel.setText("Gems: " + gemCount);
+			gemsLabel.setText(gemsLabelValue + gemCount);
         });
         
         // Start the animation sequence
@@ -912,9 +920,81 @@ public class RunesReaperUI extends Application {
     
     private void setWandCursor() {
     	Scene currentScene = primaryStage.getScene();
-        Image image = new Image("img/wand.png");
-        currentScene.setCursor(new ImageCursor(image));
+        Image wandImage = new Image("img/wand.png");
+        currentScene.setCursor(new ImageCursor(wandImage));
 	}
+    
+    private void showNoHintsPopup() {
+        // Create the popup stage
+        Stage popupStage = new Stage();
+        popupStage.setWidth(350);
+        popupStage.setHeight(350);
+        popupStage.initModality(Modality.APPLICATION_MODAL);
+        popupStage.initOwner(primaryStage);
+        
+        VBox popupVBox = new VBox(15);
+        popupVBox.setAlignment(Pos.CENTER);
+        popupVBox.setPadding(new Insets(20));
+        
+        ImageView image = new ImageView("img/sorry.png");
+        image.setFitWidth(100); 
+        image.setPreserveRatio(true);
+        
+        // Create title text
+        Text titleText = new Text("Sorry!");
+        titleText.getStyleClass().add("title-light");
+        
+        Text messageLabel = new Text("You don't have any Clairvoyance Spell!");
+        messageLabel.getStyleClass().add("content");
+        
+		// Add all elements to the popup
+        popupVBox.getChildren().addAll(image, titleText, messageLabel);
+        
+        // Create the scene and show the popup
+        Scene popupScene = new Scene(popupVBox);
+        popupScene.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
+        Image wandImage = new Image("img/wand.png");
+        popupScene.setCursor(new ImageCursor(wandImage));
+
+        popupStage.setScene(popupScene);
+        popupStage.show();
+    }
+    
+    private void showUsedPotionPopup() {
+        // Create the popup stage
+        Stage popupStage = new Stage();
+        popupStage.setWidth(350);
+        popupStage.setHeight(350);
+        popupStage.initModality(Modality.APPLICATION_MODAL);
+        popupStage.initOwner(primaryStage);
+        
+        VBox popupVBox = new VBox(15);
+        popupVBox.setAlignment(Pos.CENTER);
+        popupVBox.setPadding(new Insets(20));
+               
+        ImageView image = new ImageView("img/potion.gif");
+        image.setFitWidth(100); 
+        image.setPreserveRatio(true);
+        
+        // Create title text
+        Text titleText = new Text("Life Potion used!");
+        titleText.getStyleClass().add("title-light");
+        
+        Text messageLabel = new Text("You have " + potionCount +" Life Potions left!");
+        messageLabel.getStyleClass().add("content");
+        
+		// Add all elements to the popup
+        popupVBox.getChildren().addAll(image, titleText, messageLabel);
+        
+        // Create the scene and show the popup
+        Scene popupScene = new Scene(popupVBox);
+        popupScene.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
+        Image wandImage = new Image("img/wand.png");
+        popupScene.setCursor(new ImageCursor(wandImage));
+
+        popupStage.setScene(popupScene);
+        popupStage.show();
+    }
     
 	/*
 	 * Timer Implementation 
