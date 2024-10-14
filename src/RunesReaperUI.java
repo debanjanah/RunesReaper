@@ -19,7 +19,7 @@ import javafx.util.Duration;
 import javafx.scene.ImageCursor;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-
+import javafx.scene.input.MouseButton;
 import javafx.animation.ParallelTransition;
 import javafx.animation.ScaleTransition;
 import javafx.animation.TranslateTransition;
@@ -65,6 +65,9 @@ public class RunesReaperUI extends Application {
     private int potionCount = 0;
     private String potionLabelValue = "Life Potions: ";
     private Label potionLabel = new Label(potionLabelValue + potionCount);
+    //Setting up variables for flagging cells
+    private boolean[][] flagged;
+    private Image flagImage;
 
     @Override
     public void start(Stage primaryStage) {
@@ -134,6 +137,7 @@ public class RunesReaperUI extends Application {
         hintsLabel.setText(hintsLabelValue + hintsCount);
     	potionCount = 0;
         potionLabel.setText(potionLabelValue + potionCount);
+        
 
         //Stops and refreshes the Timer
         stopTimer();
@@ -205,6 +209,7 @@ public class RunesReaperUI extends Application {
     	cells = new Button[GRID_SIZE][GRID_SIZE];
     	fires = new boolean[GRID_SIZE][GRID_SIZE];
         revealed = new boolean[GRID_SIZE][GRID_SIZE];
+        flagged = new boolean[GRID_SIZE][GRID_SIZE];
 
         reset();
         
@@ -384,18 +389,41 @@ public class RunesReaperUI extends Application {
         
         //Sets event listener to call cellClick() function with the clicked button (cell) as an argument defined on Line 300
         cell.setOnAction(e -> cellClick(row, col));
+        
+        cell.setOnMouseClicked(e -> {
+            if (e.getButton() == MouseButton.SECONDARY) {
+                toggleFlag(row, col);
+            }
+        });
+        
         //Adds CSS class "game-cell" for styling
         cell.getStyleClass().add("game-cell");
         //Returns created cell
         return cell;
     }
     
+    //To toggle flags
+    private void toggleFlag(int row, int col) {
+        if (revealed[row][col]) return; // Don't allow flagging of revealed cells
+
+        flagged[row][col] = !flagged[row][col];
+        
+        if (flagged[row][col]) {
+        	flagImage = new Image("img/flag.png");
+            ImageView flagView = new ImageView(flagImage);
+            flagView.setFitWidth(CELL_SIZE - 10);
+            flagView.setFitHeight(CELL_SIZE - 10);
+            cells[row][col].setGraphic(flagView);
+        } else {
+            cells[row][col].setGraphic(null);
+        }
+    }
+    
     private void initializeGame() {
         Random random = new Random();
-        int firesPlaced = 0;
-        int maxAttempts = GRID_SIZE*GRID_SIZE*2; 
+        int firesPlaced;
 
-        for (int i = 0; i < maxAttempts && firesPlaced < NUM_FIRE_RUNES; i++) {
+        for (firesPlaced = 0; firesPlaced < NUM_FIRE_RUNES;) {
             int row = random.nextInt(GRID_SIZE);
             int col = random.nextInt(GRID_SIZE);
             
@@ -405,7 +433,13 @@ public class RunesReaperUI extends Application {
             }
         }
         
-        System.out.println("Runes placed: " + firesPlaced);
+        // Reset flagged array
+        for (int row = 0; row < GRID_SIZE; row++) {
+            for (int col = 0; col < GRID_SIZE; col++) {
+                flagged[row][col] = false;
+            }
+        }        
+        System.out.println("Fires placed: " + firesPlaced);
     }
    
     // Add this method to create gem buttons
@@ -483,7 +517,7 @@ public class RunesReaperUI extends Application {
             }
         }
         
-        // Spawn gems
+        //Spawn gems
         for (int i = 0; i < numGems && i < validAdjacentCells; i++) {
             int index = random.nextInt(validAdjacentCells);
             int gemRow = adjacentCells[index][0];
@@ -547,12 +581,12 @@ public class RunesReaperUI extends Application {
 
     //Function to be called when a cell is clicked
     private void cellClick(int row, int col) {
+    	if (revealed[row][col] || flagged[row][col]) return;
+    	
     	// Check if there's a visible gem on this cell
         if (gemButtons[row][col] != null && gemButtons[row][col].isVisible()) {
             return; // Don't process cell click if there's a gem
         }
-    	
-    	if (revealed[row][col]) return;
     	
     	revealed[row][col] = true;
     	//Increases the count of number of cells that has been clicked or "opened"
@@ -725,6 +759,10 @@ public class RunesReaperUI extends Application {
         popupVBox.setAlignment(Pos.CENTER);
         popupVBox.setPadding(new Insets(20));
         
+        Image winImage = new Image("img/win.png");
+        Image overImage = new Image("img/over.png");
+        ImageView imageView;
+                
         // Create title text
         Text titleText = new Text(win ? "Victory!" : "Game Over!");
         titleText.getStyleClass().add("title");
@@ -733,8 +771,14 @@ public class RunesReaperUI extends Application {
         Text contentText;
         if (win) {
             contentText = new Text("Congratulations! You've won in " + secondsElapsed + " seconds");
+            imageView = new ImageView(winImage);
+            imageView.setFitWidth(100); 
+            imageView.setPreserveRatio(true);
         } else {
-            contentText = new Text("Better Luck Next Time!");
+            contentText = new Text("Better Luck Next Time!");    
+            imageView = new ImageView(overImage);
+            imageView.setFitWidth(100); 
+            imageView.setPreserveRatio(true);
         }
         contentText.getStyleClass().add("content");
         
@@ -759,7 +803,7 @@ public class RunesReaperUI extends Application {
         buttonBox.getChildren().addAll(restartButton, homeButton);
         
         // Add all elements to the popup
-        popupVBox.getChildren().addAll(titleText, contentText, buttonBox);
+        popupVBox.getChildren().addAll(imageView, titleText, contentText, buttonBox);
         
         // Create the scene and show the popup
         Scene popupScene = new Scene(popupVBox);
