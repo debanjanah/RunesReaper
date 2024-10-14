@@ -8,9 +8,7 @@ import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-
 import java.util.Random;
-
 import javafx.animation.Animation;
 import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
@@ -23,16 +21,18 @@ import javafx.scene.input.MouseButton;
 import javafx.animation.ParallelTransition;
 import javafx.animation.ScaleTransition;
 import javafx.animation.TranslateTransition;
-import javafx.animation.FadeTransition;
-import javafx.scene.Node;
-import javafx.scene.layout.Pane;
+
 /**
  * RunesReaperUI Class
  * This class represents the main application for the RunesReaper game.
  * It extends the JavaFX Application class and manages the game's UI and logic.
  *
  * The game is a Minesweeper-like game with a magical theme, where players uncover
- * runes while avoiding fire traps and collecting gems.
+ * runes (cells) while avoiding fire traps and collecting gems.
+ * 
+ * Collected gems can be used to buy potions and spells which help the user throughout the game.
+ * Life Potions save the user from dying when user clicks on a Fire cell (mine) 
+ * Clairvoyance Spells (hints) can be used to reveal one mine adjacent to a cell, or in the cell itself if there is any.
  */
 public class RunesReaperUI extends Application {
 	
@@ -890,7 +890,7 @@ public class RunesReaperUI extends Application {
         // Create the popup stage
         Stage popupStage = new Stage();
         popupStage.setWidth(400);
-        popupStage.setHeight(300);
+        popupStage.setHeight(400);
         popupStage.initModality(Modality.APPLICATION_MODAL);
         popupStage.initOwner(primaryStage);
         
